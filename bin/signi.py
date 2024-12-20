@@ -117,7 +117,7 @@ def main():
             sys.exit(1)
 
         exit_fail = False
-        for path, status in check.checkfiles(os.getcwd(), message):
+        for path, status in check.checkfiles(os.getcwd(), message.decode('utf-8')):
             if args.path:
                 include = (path in args.path)
             else:
