@@ -64,7 +64,6 @@ be recoverable from reading your computers memory.
 
 import base64
 import bcrypt
-import ed25519
 import hashlib
 import os
 import re
@@ -72,7 +71,9 @@ import struct
 
 import signify.check as check
 from signify.util import *
-
+from nacl.signing import SigningKey, VerifyKey
+from nacl.exceptions import BadSignatureError
+from nacl.encoding import RawEncoder
 
 class SignifyError(Exception):
     pass
@@ -229,7 +230,6 @@ class SecretKey(_Materialized):
 
     def _parse_secret_key(self, msg):
         comment, blob = _Materialized.read_message(msg)
-
         try:
             pkalg, kdfalg, kdfrounds, salt, checksum, keynum, seckey = \
                 struct.unpack(b'!2s2sL16s8s8s64s', blob)
@@ -291,11 +291,11 @@ def sign(secret_key, message, embed=False):
     assert isinstance(secret_key, UnprotectedSecretKey)
     assert isinstance(message, bytes)
 
-    key_obj = ed25519.keys.SigningKey(secret_key.raw_secret_key())
+    key_obj = SigningKey(secret_key.raw_secret_key()[:32])
 
-    sig_buf = key_obj.sign(message)
+    signed_message = key_obj.sign(message)
 
-    sig_blob = b'Ed' + secret_key.keynum() + sig_buf
+    sig_blob = b'Ed' + secret_key.keynum() + signed_message.signature
 
     sig = _Materialized.write_message('signature from %s' % (secret_key.comment(),), sig_blob)
     if embed:
@@ -318,11 +318,11 @@ def verify(public_key, signature, message):
     assert isinstance(signature, Signature)
     assert isinstance(message, bytes)
 
-    key_obj = ed25519.keys.VerifyingKey(public_key.raw())
+    key_obj = VerifyKey(public_key.raw())
     try:
-        key_obj.verify(signature.raw(), message)
+        key_obj.verify(message, signature.raw())
         return True
-    except ed25519.BadSignatureError as e:
+    except BadSignatureError as e:
         raise InvalidSignature('signify: signature verification failed')
 
 
@@ -352,15 +352,14 @@ def verify_embedded(public_key, embedded_message):
     return message
 
 
-def generate_from_raw(comment, password, raw_pub, raw_priv):
+def generate_from_raw(comment, password, pub, priv):
     """ADVANCED: Given a raw Ed25519 key pair raw_pub and raw_priv,
     create a Signify keypair.
 
     See generate() for documentation.
     """
-
-    assert isinstance(raw_pub, bytes)
-    assert isinstance(raw_priv, bytes)
+    raw_pub = bytes(pub)
+    raw_priv = bytes(priv)
 
     if comment is None:
         comment = 'signify'
@@ -376,8 +375,8 @@ def generate_from_raw(comment, password, raw_pub, raw_priv):
         xorkey = b'\x00' * 64
     else:
         xorkey = bcrypt.kdf(password, salt, 64, kdfrounds)
-    protected_key = xorbuf(xorkey, raw_priv)
-    checksum = hashlib.sha512(raw_priv).digest()[0:8]
+    protected_key = xorbuf(xorkey, raw_priv + raw_pub)
+    checksum = hashlib.sha512(raw_priv+raw_pub).digest()[0:8]
 
     priv_blob = b'Ed' + b'BK' + struct.pack('!L', kdfrounds) + \
                 salt + checksum + keynum + protected_key
@@ -400,8 +399,9 @@ def generate(comment, password):
     assert isinstance(comment, (type(None), str, unicode))
     #assert isinstance(password, bytes)
 
-    sk, vk = ed25519.keys.create_keypair()
-    return generate_from_raw(comment, password, vk.to_bytes(), sk.to_bytes())
+    sk = SigningKey.generate()
+    vk = sk.verify_key
+    return generate_from_raw(comment, password, vk, sk)
 
 
 def sign_files(secret_key, algo, paths, root='.'):
