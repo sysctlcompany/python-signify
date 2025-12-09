@@ -1,2 +1,2 @@
-nacl
+pynacl
 py-bcrypt

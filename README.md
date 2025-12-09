@@ -2,8 +2,6 @@
 
 0.1.0-RC1
 
-[![Build Status](https://travis-ci.org/bjornedstrom/python-signify.png?branch=master)](https://travis-ci.org/bjornedstrom/python-signify)
-
 [Signify](http://www.tedunangst.com/flak/post/signify) was originally written for OpenBSD to sign files and packages, as a light-weight replacement to using PGP. **python-signify** is a module for working with Signify keys/signatures from Python. This module allow you to sign/verify messages and work with Signify keypairs.
 
 Specifically this project contains two modules that you can use depending on requirements: the first one re-implements Signify functionality directly, and is the recommended use of python-signify. The second one uses the `subprocess` module and use the `signify` binary.
@@ -16,11 +14,11 @@ Obligatory security warning for Python projects using cryptographic keys: python
 
 ## Installation
 
-python-signify is tested on a few versions of Python 2 and 3.
+python-signify is tested on a few versions of Python 3.
 
 The `signify.pure` module has a Python implementation of some parts of Signify, without requiring the `signify` binary. This module has two dependencies:
 
-- [python-ed25519](https://github.com/warner/python-ed25519) (`pip install ed25519`)
+- [pynacl](https://github.com/pyca/pynacl) (`pip install pynacl`)
 - [py-bcrypt](https://github.com/pyca/bcrypt) (`pip install py-bcrypt`)
 
 If you use the `subprocess` based module, then there are no dependencies other than that `signify` is installed  on the system and reachable on PATH.
@@ -47,8 +45,8 @@ message = b"""my message
 
 print(signify.verify(pubkey, signature, message))
 
-new_pub, new_sec = signify.generate('my new key', 'password')
-new_sig = signify.sign(new_sec.unprotect('password'), message)
+new_pub, new_sec = signify.generate('my new key', b'password')
+new_sig = signify.sign(new_sec.unprotect(b'password'), message)
 print(new_sig.to_bytes())
 print(signify.verify(new_pub, new_sig, message))
 ```
@@ -60,7 +58,7 @@ Before you can use a `SecretKey` for the signing operation, you have to decrypt 
 ```python
 from signify.pure import SecretKey, sign
 sk = SecretKey.from_bytes(...)
-sku = sk.unprotect('password')
+sku = sk.unprotect(b'password')
 sig = sign(sku, b'my message')
 print(sig.to_bytes())
 ```
@@ -82,7 +80,7 @@ If you do not already have a Signify keypair (`signify -G`) you can generate one
 
 ```python
 from signify.pure import generate
-pk, sk = generate('alice aliceson', 'password')
+pk, sk = generate('alice aliceson', b'password')
 ```
 
 The first parameter is a comment describing the key.
@@ -102,7 +100,7 @@ from signify.pure import PublicKey, SecretKey, sign, verify_embedded
 
 # Sign
 sk = SecretKey.from_bytes(...)
-sku = sk.unprotect('password')
+sku = sk.unprotect(b'password')
 sig = sign(sku, b'my message', embed=True)
 print(sig.to_bytes())
 
