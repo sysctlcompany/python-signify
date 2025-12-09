@@ -1,2 +1,2 @@
-ed25519
+nacl
 py-bcrypt
