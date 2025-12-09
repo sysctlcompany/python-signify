@@ -17,7 +17,7 @@ setup(
     ],
     install_requires=[
         'py-bcrypt',
-        'ed25519'
+        'nacl'
     ],
     scripts=[
         'bin/signi.py',

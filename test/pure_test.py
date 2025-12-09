@@ -31,13 +31,13 @@ my message
         ]
 
     def test_extraction(self):
-        self.assertEquals(
+        self.assertEqual(
             b'\xe3\xb2\xd6\x0e\xca\xa3\xef\x0b\x8c\xad@@\xb2\x04j\xfa\x7f6\xe2\xf9\xe0\t\xf5\x0c-\x14\xd9\xc7\xc2,\xa1%',
             signify.PublicKey.from_bytes(self.KAT[0]['pub']).raw())
 
         sk = signify.SecretKey.from_bytes(self.KAT[0]['priv'])
         sku = sk.unprotect('test')
-        self.assertEquals(
+        self.assertEqual(
             b'D@\xd9\xca\xb2\x96;\xa0^\xbb\x16\xc8\x0f\xf7Y=(hu\x85\xbd\xe4i\xf6\xcf\x0f\xfb#\xc1\xfa\xe0\xa1\xe3\xb2\xd6\x0e\xca\xa3\xef\x0b\x8c\xad@@\xb2\x04j\xfa\x7f6\xe2\xf9\xe0\t\xf5\x0c-\x14\xd9\xc7\xc2,\xa1%',
             sku.raw_secret_key())
 
@@ -53,7 +53,7 @@ my message
         sig = signify.sign(sku,
                            self.KAT[0]['message'])
 
-        self.assertEquals(self.KAT[0]['sig'], sig.to_bytes())
+        self.assertEqual(self.KAT[0]['sig'], sig.to_bytes())
 
     def test_sign_embedded(self):
         sk = signify.SecretKey.from_bytes(self.KAT[0]['priv'])
@@ -62,14 +62,14 @@ my message
                            self.KAT[0]['message'],
                            True)
 
-        self.assertEquals(self.KAT[0]['embedded'], sig.to_bytes())
+        self.assertEqual(self.KAT[0]['embedded'], sig.to_bytes())
 
     def test_verify_embedded(self):
         self.assertTrue(
             signify.verify_embedded(signify.PublicKey.from_bytes(self.KAT[0]['pub']),
                                     self.KAT[0]['embedded']))
 
-        self.assertEquals(b'my message\n',
+        self.assertEqual(b'my message\n',
             signify.verify_embedded(signify.PublicKey.from_bytes(self.KAT[0]['pub']),
                                     signify.Signature.from_bytes(self.KAT[0]['embedded'])))
 
