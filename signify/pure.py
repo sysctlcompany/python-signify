@@ -73,7 +73,6 @@ import signify.check as check
 from signify.util import *
 from nacl.signing import SigningKey, VerifyKey
 from nacl.exceptions import BadSignatureError
-from nacl.encoding import RawEncoder
 
 class SignifyError(Exception):
     pass
@@ -230,6 +229,7 @@ class SecretKey(_Materialized):
 
     def _parse_secret_key(self, msg):
         comment, blob = _Materialized.read_message(msg)
+
         try:
             pkalg, kdfalg, kdfrounds, salt, checksum, keynum, seckey = \
                 struct.unpack(b'!2s2sL16s8s8s64s', blob)
