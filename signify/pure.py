@@ -115,12 +115,14 @@ class _Materialized(object):
         assert isinstance(msg, bytes)
 
         try:
-            comment_line, b64 = msg.split(b'\n', 1)
+            comment_line, rest = msg.split(b'\n', 1)
+            # Only decode the base64 line itself; ignore any embedded message body that follows.
+            b64_line = rest.split(b'\n', 1)[0]
         except:
             raise SignifyError('malformed message')
 
         try:
-            blob = base64.b64decode(b64)
+            blob = base64.b64decode(b64_line)
         except:
             raise SignifyError('malformed message: base64 error')
 
