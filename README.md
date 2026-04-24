@@ -1,6 +1,6 @@
 # python-signify - OpenBSD Signify for Python
 
-0.1.0-RC1
+0.2.0
 
 [Signify](http://www.tedunangst.com/flak/post/signify) was originally written for OpenBSD to sign files and packages, as a light-weight replacement to using PGP. **python-signify** is a module for working with Signify keys/signatures from Python. This module allow you to sign/verify messages and work with Signify keypairs.
 

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="python-signify",
-    version='0.1.0-RC1',
+    version='0.2.0',
     url='https://github.com/bjornedstrom/python-signify',
     license='MIT',
     description="OpenBSD Signify for Python",
