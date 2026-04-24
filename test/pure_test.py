@@ -122,5 +122,20 @@ my message
                            b'My Message'))
 
 
+    def test_read_message_ignores_embedded_body(self):
+        # 'abc' encodes to 'YWJj' (3 bytes, no '=' padding).
+        # An embedded body of 'AAAA\n' is base64-valid, so the old code would
+        # decode 'YWJj\nAAAA\n' together, producing b'abc\x00\x00\x00' instead
+        # of b'abc'. The fix reads only the second line as base64.
+        plain = b'untrusted comment: test\nYWJj\n'
+        _, blob_plain = signify._Materialized.read_message(plain)
+        self.assertEqual(b'abc', blob_plain)
+
+        embedded = b'untrusted comment: test\nYWJj\nAAAA\n'
+        _, blob_embedded = signify._Materialized.read_message(embedded)
+        self.assertEqual(b'abc', blob_embedded)
+        self.assertEqual(blob_plain, blob_embedded)
+
+
 if __name__ == '__main__':
     unittest.main()
